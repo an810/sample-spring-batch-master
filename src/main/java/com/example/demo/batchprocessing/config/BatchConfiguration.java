@@ -37,10 +37,10 @@ public class BatchConfiguration {
 	private OrderRepository orderRepository;
 
 	@Bean
-	public ItemReader<Order> reader(String fileName) {
+	public ItemReader<Order> reader() {
 		return new FlatFileItemReaderBuilder<Order>()
 			.name("orderItemReader")
-			.resource(new ClassPathResource(fileName))
+			.resource(new ClassPathResource("order_1.csv"))
 			.delimited()
 			.names(new String[] {"CustomerId", "ItemId", "ItemPrice", "ItemName", "PurchaseDate"})
 			.fieldSetMapper(new BeanWrapperFieldSetMapper<Order>() {{
@@ -86,7 +86,7 @@ public class BatchConfiguration {
 	public Step step1() {
 	  return stepBuilderFactory.get("step1")
 		  .<Order, Order> chunk(10)
-		  .reader(reader("order_1.csv"))
+		  .reader(reader())
 		  .processor(processor())
 		  .writer(writer())
 		  .faultTolerant()
