@@ -1,4 +1,4 @@
-package com.example.demo.batchprocessing;
+package com.example.demo.batchprocessing.config;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

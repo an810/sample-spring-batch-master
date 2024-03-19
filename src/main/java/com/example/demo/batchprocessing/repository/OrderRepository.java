@@ -1,5 +1,6 @@
-package com.example.demo.batchprocessing;
+package com.example.demo.batchprocessing.repository;
 
+import com.example.demo.batchprocessing.entity.Order;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
 

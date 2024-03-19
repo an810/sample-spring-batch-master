@@ -1,5 +1,7 @@
-package com.example.demo.batchprocessing;
+package com.example.demo.batchprocessing.config;
 
+import com.example.demo.batchprocessing.repository.OrderRepository;
+import com.example.demo.batchprocessing.entity.Order;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.Step;
 import org.springframework.batch.core.configuration.annotation.EnableBatchProcessing;
@@ -35,10 +37,10 @@ public class BatchConfiguration {
 	private OrderRepository orderRepository;
 
 	@Bean
-	public ItemReader<Order> reader() {
+	public ItemReader<Order> reader(String fileName) {
 		return new FlatFileItemReaderBuilder<Order>()
 			.name("orderItemReader")
-			.resource(new ClassPathResource("orders.csv"))
+			.resource(new ClassPathResource(fileName))
 			.delimited()
 			.names(new String[] {"CustomerId", "ItemId", "ItemPrice", "ItemName", "PurchaseDate"})
 			.fieldSetMapper(new BeanWrapperFieldSetMapper<Order>() {{
@@ -84,7 +86,7 @@ public class BatchConfiguration {
 	public Step step1() {
 	  return stepBuilderFactory.get("step1")
 		  .<Order, Order> chunk(10)
-		  .reader(reader())
+		  .reader(reader("order_1.csv"))
 		  .processor(processor())
 		  .writer(writer())
 		  .faultTolerant()
