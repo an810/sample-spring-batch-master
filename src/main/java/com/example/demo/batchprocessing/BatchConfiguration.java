@@ -16,20 +16,24 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.ClassPathResource;
+import org.springframework.retry.annotation.Backoff;
+import org.springframework.retry.annotation.EnableRetry;
+import org.springframework.retry.annotation.Retryable;
 
+@EnableRetry
 @Configuration
 @EnableBatchProcessing
 public class BatchConfiguration {
-	
+
 	@Autowired
 	public JobBuilderFactory jobBuilderFactory;
-	
+
 	@Autowired
 	public StepBuilderFactory stepBuilderFactory;
 
 	@Autowired
 	private OrderRepository orderRepository;
-	
+
 	@Bean
 	public ItemReader<Order> reader() {
 		return new FlatFileItemReaderBuilder<Order>()
@@ -38,11 +42,11 @@ public class BatchConfiguration {
 			.delimited()
 			.names(new String[] {"CustomerId", "ItemId", "ItemPrice", "ItemName", "PurchaseDate"})
 			.fieldSetMapper(new BeanWrapperFieldSetMapper<Order>() {{
-				setTargetType(Order.class);	
+				setTargetType(Order.class);
 			}})
 			.build();
 	}
-	
+
 	@Bean
 	public ItemProcessor<Order, Order> processor() {
 		return new ItemProcessor<Order, Order>() {
@@ -53,11 +57,11 @@ public class BatchConfiguration {
 			}
 		};
 	}
-	
+
 
 	@Bean
 	public ItemWriter<Order> writer() {
-		RepositoryItemWriter<Order> writer = new RepositoryItemWriter<>(); 
+		RepositoryItemWriter<Order> writer = new RepositoryItemWriter<>();
 		writer.setRepository(orderRepository);
 		writer.setMethodName("save");
 		return writer;
@@ -75,13 +79,17 @@ public class BatchConfiguration {
 			.build();
 	}
 
+	@Retryable(value = Exception.class, maxAttempts = 3, backoff = @Backoff(delay = 1000))
 	@Bean
 	public Step step1() {
 	  return stepBuilderFactory.get("step1")
-	    .<Order, Order> chunk(10)
-	    .reader(reader())
-	    .processor(processor())
-	    .writer(writer())
-	    .build();
+		  .<Order, Order> chunk(10)
+		  .reader(reader())
+		  .processor(processor())
+		  .writer(writer())
+		  .faultTolerant()
+		  .retryLimit(3)
+		  .retry(Exception.class)
+		  .build();
 	}
 }
