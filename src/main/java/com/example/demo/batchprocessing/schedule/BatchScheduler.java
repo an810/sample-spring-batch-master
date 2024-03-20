@@ -1,6 +1,5 @@
 //package com.example.demo.batchprocessing.schedule;
 //
-//import com.example.demo.batchprocessing.config.BatchConfiguration;
 //import com.example.demo.batchprocessing.entity.ImportFile;
 //import com.example.demo.batchprocessing.repository.ImportFileRepository;
 //import lombok.extern.slf4j.Slf4j;
@@ -15,7 +14,6 @@
 //import org.springframework.scheduling.annotation.Scheduled;
 //import org.springframework.stereotype.Component;
 //
-//import java.time.LocalDateTime;
 //import java.util.List;
 //
 //
@@ -27,7 +25,7 @@
 //    private JobLauncher jobLauncher;
 //
 //    @Autowired
-//    private BatchConfiguration batchConfiguration;
+//    private OrderBatchConfiguration orderBatchConfiguration;
 //
 //    @Autowired
 //    private ImportFileRepository importFileRepository;
@@ -38,11 +36,11 @@
 //
 //        importFiles.forEach(importFile -> {
 //            JobParameters jobParameters = new JobParametersBuilder()
-//                    .addString("date", LocalDateTime.now().toString())
+//                    .addString("fileName", importFile.getFileName())
 //                    .toJobParameters();
 //
 //            try {
-//                jobLauncher.run(batchConfiguration.importOrderJob(), jobParameters);
+//                jobLauncher.run(orderBatchConfiguration.importOrderJob(), jobParameters);
 //            } catch (JobExecutionAlreadyRunningException | JobInstanceAlreadyCompleteException
 //                     | JobParametersInvalidException | org.springframework.batch.core.repository.JobRestartException e) {
 //                log.error(e.getMessage());
