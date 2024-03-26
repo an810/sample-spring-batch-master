@@ -34,19 +34,27 @@ public class OrderBatchScheduler {
     @Scheduled(fixedRate = 1000L)
     public void runJob() {
         List<ImportFile> importFiles = importFileRepository.findAll();
+        log.info("Import files found: {}", importFiles.size());
 
         importFiles.forEach(importFile -> {
-            JobParameters jobParameters = new JobParametersBuilder()
-                    .addString("fileName", importFile.getFileName())
-                    .toJobParameters();
-
-            try {
-                jobLauncher.run(orderBatchConfiguration.importOrderJob(), jobParameters);
-            } catch (JobExecutionAlreadyRunningException | JobInstanceAlreadyCompleteException
-                     | JobParametersInvalidException | org.springframework.batch.core.repository.JobRestartException e) {
-                log.error(e.getMessage());
+            String fileName = importFile.getFileName();
+            if (fileName != null) {
+                JobParameters jobParameters = new JobParametersBuilder()
+                        .addString("fileName", importFile.getFileName())
+                        .toJobParameters();
+                log.info("Processing import file {}", fileName);
+                try {
+                    jobLauncher.run(orderBatchConfiguration.importOrderJob(), jobParameters);
+                    importFileRepository.delete(importFile);
+                    log.info("Import file {} has been processed", fileName);
+                } catch (JobExecutionAlreadyRunningException | JobInstanceAlreadyCompleteException
+                         | JobParametersInvalidException |
+                         org.springframework.batch.core.repository.JobRestartException e) {
+                    log.error(e.getMessage());
+                }
+            } else {
+                log.error("Filename is null for import file");
             }
-            importFileRepository.delete(importFile);
         });
 
     }

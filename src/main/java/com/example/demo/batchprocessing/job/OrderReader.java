@@ -1,6 +1,8 @@
 package com.example.demo.batchprocessing.job;
 
 import com.example.demo.batchprocessing.entity.Order;
+import org.springframework.batch.core.StepExecution;
+import org.springframework.batch.core.annotation.BeforeStep;
 import org.springframework.batch.item.ExecutionContext;
 import org.springframework.batch.item.ItemStreamException;
 import org.springframework.batch.item.file.FlatFileItemReader;
@@ -13,9 +15,10 @@ import org.springframework.stereotype.Component;
 @Component
 public class OrderReader extends FlatFileItemReader<Order> {
 
+    private String fileName;
+
     public OrderReader() {
         this.setName("orderItemReader");
-//        this.setLinesToSkip(1);
         this.setLineMapper(new DefaultLineMapper<Order>() {{
             setLineTokenizer(new DelimitedLineTokenizer() {{
                 setNames(new String[]{"CustomerId", "ItemId", "ItemPrice", "ItemName", "PurchaseDate"});
@@ -26,9 +29,13 @@ public class OrderReader extends FlatFileItemReader<Order> {
         }});
     }
 
+    @BeforeStep
+    public void beforeStep(StepExecution stepExecution) {
+        fileName = stepExecution.getJobParameters().getString("fileName");
+    }
+
     @Override
     public void open(ExecutionContext executionContext) throws ItemStreamException {
-        String fileName = executionContext.getString("fileName");
         this.setResource(new ClassPathResource(fileName));
         super.open(executionContext);
     }
