@@ -1,90 +1,69 @@
-//package com.example.demo.batchprocessing.config;
-//
-//import com.example.demo.batchprocessing.entity.Order;
-//import com.example.demo.batchprocessing.repository.OrderRepository;
-//import org.springframework.batch.core.Job;
-//import org.springframework.batch.core.Step;
-//import org.springframework.batch.core.configuration.annotation.EnableBatchProcessing;
-//import org.springframework.batch.core.configuration.annotation.JobBuilderFactory;
-//import org.springframework.batch.core.configuration.annotation.StepBuilderFactory;
-//import org.springframework.batch.core.launch.support.RunIdIncrementer;
-//import org.springframework.batch.item.ItemProcessor;
-//import org.springframework.batch.item.ItemReader;
-//import org.springframework.batch.item.ItemWriter;
-//import org.springframework.batch.item.data.RepositoryItemWriter;
-//import org.springframework.batch.item.file.builder.FlatFileItemReaderBuilder;
-//import org.springframework.batch.item.file.mapping.BeanWrapperFieldSetMapper;
-//import org.springframework.beans.factory.annotation.Autowired;
-//import org.springframework.context.annotation.Bean;
-//import org.springframework.context.annotation.Configuration;
-//import org.springframework.core.io.ClassPathResource;
-//import org.springframework.core.io.FileSystemResource;
-//
-//@Configuration
-//@EnableBatchProcessing
-//public class OrderBatchConfiguration {
-//
-//	@Autowired
-//	public JobBuilderFactory jobBuilderFactory;
-//
-//	@Autowired
-//	public StepBuilderFactory stepBuilderFactory;
-//
-//	@Autowired
-//	private OrderRepository orderRepository;
-//
-//	@Bean
-//	public ItemReader<Order> reader() {
-//		return new FlatFileItemReaderBuilder<Order>()
-//				.name("orderItemReader")
-//				.resource(new ClassPathResource("orders.csv"))
-//				.delimited()
-//				.names(new String[] {"CustomerId", "ItemId", "ItemPrice", "ItemName", "PurchaseDate"})
-//				.fieldSetMapper(new BeanWrapperFieldSetMapper<Order>() {{
-//					setTargetType(Order.class);
-//				}})
-//				.build();
-//	}
-//
-//	@Bean
-//	public ItemProcessor<Order, Order> processor() {
-//		return new ItemProcessor<Order, Order>() {
-//
-//			@Override
-//			public Order process(final Order order) throws Exception {
-//				return order;
-//			}
-//		};
-//	}
-//
-//
-//	@Bean
-//	public ItemWriter<Order> writer() {
-//		RepositoryItemWriter<Order> writer = new RepositoryItemWriter<>();
-//		writer.setRepository(orderRepository);
-//		writer.setMethodName("save");
-//		return writer;
-//	}
-//
-//
-//	@Bean
-//	public Job importOrderJob()
-//	{
-//		return jobBuilderFactory.get("importOrderJob")
-//				.incrementer(new RunIdIncrementer())
-//				.listener(new JobCompletionNotificationListener())
-//				.flow(step1())
-//				.end()
-//				.build();
-//	}
-//
-//	@Bean
-//	public Step step1() {
-//		return stepBuilderFactory.get("step1")
-//				.<Order, Order> chunk(10)
-//				.reader(reader())
-//				.processor(processor())
-//				.writer(writer())
-//				.build();
-//	}
-//}
+package com.example.demo.batchprocessing.config;
+
+import com.example.demo.batchprocessing.step.AfterWritingTasklet;
+import com.example.demo.batchprocessing.step.DataProcessingTasklet;
+import com.example.demo.batchprocessing.step.DatabaseWritingTasklet;
+import com.example.demo.batchprocessing.step.FileReadingTasklet;
+import org.springframework.batch.core.Job;
+import org.springframework.batch.core.Step;
+import org.springframework.batch.core.configuration.annotation.*;
+import org.springframework.batch.core.launch.support.RunIdIncrementer;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+
+@EnableBatchProcessing
+@Configuration
+public class OrderBatchConfiguration {
+    @Autowired
+    private JobBuilderFactory jobBuilderFactory;
+    @Autowired
+    private StepBuilderFactory stepBuilderFactory;
+    @Autowired
+    private FileReadingTasklet fileReadingTasklet;
+    @Autowired
+    private DataProcessingTasklet dataProcessingTasklet;
+    @Autowired
+    private DatabaseWritingTasklet databaseWritingTasklet;
+    @Autowired
+    private AfterWritingTasklet afterWritingTasklet;
+
+    @Bean
+    public Job importOrderJob() {
+        return jobBuilderFactory.get("importOrderJob")
+                .incrementer(new RunIdIncrementer())
+                .start(fileReadingStep())
+                .next(dataProcessingStep())
+                .next(databaseWritingStep())
+                .next(afterWritingStep())
+                .build();
+    }
+
+    @Bean
+    public Step fileReadingStep() {
+        return stepBuilderFactory.get("fileReadingStep")
+            .tasklet(fileReadingTasklet)
+            .build();
+    }
+
+    @Bean
+    public Step dataProcessingStep() {
+        return stepBuilderFactory.get("dataProcessingStep")
+            .tasklet(dataProcessingTasklet)
+            .build();
+    }
+
+    @Bean
+    public Step databaseWritingStep() {
+        return stepBuilderFactory.get("databaseWritingStep")
+            .tasklet(databaseWritingTasklet)
+            .build();
+    }
+
+    @Bean
+    public Step afterWritingStep() {
+        return stepBuilderFactory.get("afterWritingStep")
+            .tasklet(afterWritingTasklet)
+            .build();
+    }
+}

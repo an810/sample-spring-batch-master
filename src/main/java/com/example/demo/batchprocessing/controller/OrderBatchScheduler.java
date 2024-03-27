@@ -1,6 +1,6 @@
-package com.example.demo.batchprocessing.schedule;
+package com.example.demo.batchprocessing.controller;
 
-import com.example.demo.batchprocessing.config.BatchConfiguration;
+import com.example.demo.batchprocessing.config.OrderBatchConfiguration;
 import com.example.demo.batchprocessing.entity.ImportFile;
 import com.example.demo.batchprocessing.repository.ImportFileRepository;
 import lombok.extern.slf4j.Slf4j;
@@ -26,7 +26,7 @@ public class OrderBatchScheduler {
     private JobLauncher jobLauncher;
 
     @Autowired
-    private BatchConfiguration orderBatchConfiguration;
+    private OrderBatchConfiguration orderBatchConfiguration;
 
     @Autowired
     private ImportFileRepository importFileRepository;
@@ -45,7 +45,6 @@ public class OrderBatchScheduler {
                 log.info("Processing import file {}", fileName);
                 try {
                     jobLauncher.run(orderBatchConfiguration.importOrderJob(), jobParameters);
-                    importFileRepository.delete(importFile);
                     log.info("Import file {} has been processed", fileName);
                 } catch (JobExecutionAlreadyRunningException | JobInstanceAlreadyCompleteException
                          | JobParametersInvalidException |
@@ -55,6 +54,7 @@ public class OrderBatchScheduler {
             } else {
                 log.error("Filename is null for import file");
             }
+//            importFileRepository.delete(importFile);
         });
 
     }
