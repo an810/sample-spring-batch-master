@@ -19,7 +19,7 @@ import java.util.List;
 @StepScope
 public class FileReadingTasklet implements Tasklet {
 
-    private final ClassPathResource resource;
+    private ClassPathResource resource;
 
     public FileReadingTasklet(@Value("#{jobParameters['fileName']}") String fileName) {
         this.resource = new ClassPathResource(fileName);

@@ -9,6 +9,7 @@ import org.springframework.batch.core.Step;
 import org.springframework.batch.core.configuration.annotation.*;
 import org.springframework.batch.core.launch.support.RunIdIncrementer;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -32,10 +33,10 @@ public class OrderBatchConfiguration {
     public Job importOrderJob() {
         return jobBuilderFactory.get("importOrderJob")
                 .incrementer(new RunIdIncrementer())
+                .preventRestart()
                 .start(fileReadingStep())
                 .next(dataProcessingStep())
                 .next(databaseWritingStep())
-                .next(afterWritingStep())
                 .build();
     }
 
