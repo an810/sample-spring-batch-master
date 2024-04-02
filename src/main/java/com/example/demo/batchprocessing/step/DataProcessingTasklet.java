@@ -17,6 +17,7 @@ public class DataProcessingTasklet implements Tasklet {
 
     @Override
     public RepeatStatus execute(StepContribution contribution, ChunkContext chunkContext) throws Exception {
+        processedOrders.clear();
         for (String line : FileReadingTasklet.lines) {
             // Process the line here
             Order processedOrder = processLine(line);
