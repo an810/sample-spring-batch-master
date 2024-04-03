@@ -26,8 +26,6 @@ public class OrderBatchConfiguration {
     private DataProcessingTasklet dataProcessingTasklet;
     @Autowired
     private DatabaseWritingTasklet databaseWritingTasklet;
-    @Autowired
-    private AfterWritingTasklet afterWritingTasklet;
 
     @Bean
     public Job importOrderJob() {
@@ -58,13 +56,6 @@ public class OrderBatchConfiguration {
     public Step databaseWritingStep() {
         return stepBuilderFactory.get("databaseWritingStep")
             .tasklet(databaseWritingTasklet)
-            .build();
-    }
-
-    @Bean
-    public Step afterWritingStep() {
-        return stepBuilderFactory.get("afterWritingStep")
-            .tasklet(afterWritingTasklet)
             .build();
     }
 }
